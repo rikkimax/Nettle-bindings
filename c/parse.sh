@@ -1,6 +1,10 @@
 rm -rf ../source/static/nettle/*.d
 rm -rf ../source/dynamic/nettle/*.d
 
+echo "" > output/all.defs
+echo "" > output/all.impl
+echo "" > output/all.types
+echo "" > output/all.bind
 for file in files/*.c
 do
 	file=$(basename "$file")
@@ -45,6 +49,26 @@ do
 	cp output/$file.d .temp
 	cat .temp |
 	grep -v "alias uint ulong;" > output/$file.d
+	
+	cat output/$file.d | awk '
+!/^[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\([ ]*([a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)[ ]*(,[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)*\);[ ]*$/
+' |
+	grep -v "^module" |
+	grep -v "^/\*.*\*/$" | 
+	grep -v "^extern[ ]*\(.*\):" |
+	tr '\n' '\t' |
+	awk '
+{
+gsub(/struct[ ]*[a-zA-Z0-9_]*[ \t]*\{[ \t]*\}\t/, "");
+print;
+}
+' |
+	tr '\t' '\n' |
+	grep -v "^struct.*;$" |
+	grep -v "__mpz_struct" |
+	grep -v "alias ubyte uint8_t;" |
+	grep -v "alias uint uint32_t;" |
+	grep -v "alias ulong uint64_t;" >> output/all.types
 	
 	gcc files/$file.c -E -P -dD  -I. -lgmp -nostdinc -undef > output/$file.h.vars
 	cp output/$file.h.vars .temp
@@ -171,7 +195,8 @@ for(i in vals)
 	delete vals[i];
 };' |
 	grep -v "__VERSION__" |
-	grep -v "__STDC" >> output/$file.d
+	grep -v "__STDC" |
+	grep -v "_STDINT_H" >> output/$file.d
 	
 	rm .temp
 	rm output/$file.h
@@ -179,6 +204,108 @@ for(i in vals)
 
 	cp output/$file.d ../source/static/nettle/
 	
+	cat output/$file.d | awk '
+function ltrim(v) { 
+   gsub(/^[ \t]+/, "", v); 
+   return v; 
+} 
+function rtrim(v) { 
+   gsub(/[ \t]+$/, "", v); 
+   return v; 
+} 
+function trim(v) { 
+   return ltrim(rtrim(v)); 
+} 
+
+/^[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\([ ]*([a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)[ ]*(,[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)*\);[ ]*$/{
+$line = $0;
+if (index($line, " (") == 0)
+	sub(/\(/, " (", $line);
+if (substr($line, length($line)) == ";")
+	$line = substr($line, 1, length($line) - 1);
+$n = split($line, vals, " ");
+val="";
+for(i=3;i<=$n;i++)
+	val=val" "vals[i];
+val = trim(val);
+print "alias "vals[1]" function"val" da_"vals[2]";";
+for(i in vals)
+	delete vals[i];
+};' >> output/all.defs
+
+	cat output/$file.d | awk '
+function ltrim(v) { 
+   gsub(/^[ \t]+/, "", v); 
+   return v; 
+} 
+function rtrim(v) { 
+   gsub(/[ \t]+$/, "", v); 
+   return v; 
+} 
+function trim(v) { 
+   return ltrim(rtrim(v)); 
+} 
+
+/^[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\([ ]*([a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)[ ]*(,[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)*\);[ ]*$/{
+$line = $0;
+if (index($line, " (") == 0)
+	sub(/\(/, " (", $line);
+if (substr($line, length($line)) == ";")
+	$line = substr($line, 1, length($line) - 1);
+$n = split($line, vals, " ");
+print "bindFunc(cast(void**)&"vals[2]", \""vals[2]"\");";
+for(i in vals)
+	delete vals[i];
+};' >> output/all.bind
+
+	cat output/$file.d | awk '
+function ltrim(v) { 
+   gsub(/^[ \t]+/, "", v); 
+   return v; 
+} 
+function rtrim(v) { 
+   gsub(/[ \t]+$/, "", v); 
+   return v; 
+} 
+function trim(v) { 
+   return ltrim(rtrim(v)); 
+} 
+
+/^[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\([ ]*([a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)[ ]*(,[ ]*[a-zA-Z_][a-zA-Z_0-9]*[ ]*\*?[ ]*[a-zA-Z_][a-zA-Z_0-9]*)*\);[ ]*$/{
+$line = $0;
+if (index($line, " (") == 0)
+	sub(/\(/, " (", $line);
+if (substr($line, length($line)) == ";")
+	$line = substr($line, 1, length($line) - 1);
+$n = split($line, vals, " ");
+val="";
+for(i=3;i<=$n;i++)
+	val=val" "vals[i];
+val = trim(val);
+print "da_"vals[2]" "vals[2]";";
+for(i in vals)
+	delete vals[i];
+};' >> output/all.impl
+
 	echo "void main(){}" >> output/$file.d
 	rdmd output/$file.d
 done
+
+for file in files/remove/*.d
+do
+	rdmd remove.d output/all.types $file
+done
+
+
+cat files/dynamic/functions.top > ../source/dynamic/nettle/functions.d
+cat output/all.defs | awk '{print "    "$0;}' | sort - -u >> ../source/dynamic/nettle/functions.d
+cat files/dynamic/functions.middle >> ../source/dynamic/nettle/functions.d
+cat output/all.impl | awk '{print "    "$0;}' | sort - -u >> ../source/dynamic/nettle/functions.d
+cat files/dynamic/functions.bottom >> ../source/dynamic/nettle/functions.d
+
+cat files/dynamic/types.top > ../source/dynamic/nettle/types.d
+cat output/all.types >> ../source/dynamic/nettle/types.d
+
+cat files/dynamic/nettle.top > ../source/dynamic/nettle/nettle.d
+cat output/all.bind | awk '{print "            "$0;}' | sort - -u >> ../source/dynamic/nettle/nettle.d
+cat files/dynamic/nettle.bottom >> ../source/dynamic/nettle/nettle.d

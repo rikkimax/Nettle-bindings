@@ -1,0 +1,23 @@
+        }
+    }
+
+    public
+    {
+        this()
+        {
+            super(libNames);
+        }
+    }
+}
+
+__gshared DerelictNettleLoader DerelictNettle;
+
+shared static this()
+{
+    DerelictNettle = new DerelictNettleLoader();
+}
+
+shared static ~this()
+{
+    DerelictNettle.unload();
+}

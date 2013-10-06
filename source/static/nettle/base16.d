@@ -38,7 +38,3 @@ struct nettle_buffer;
 struct sexp_iterator;
 struct asn1_der_iterator;
 const unix = 1;
-const _STDINT_HAVE_INT_FAST32_T = 1;
-const __NETTLE_STDINT_H = 1;
-const _GENERATED_STDINT_H = " ";
-const _STDINT_HAVE_STDINT_H = 1;
