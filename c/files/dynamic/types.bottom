@@ -1,0 +1,13 @@
+alias ubyte uint8_t;
+alias uint uint32_t;
+alias ulong uint64_t;
+
+alias _N1 __mpz_struct;
+alias __mpz_struct [1]mpz_t;
+struct _N1
+{
+}
+
+struct nettle_buffer;
+struct sexp_iterator;
+struct asn1_der_iterator;

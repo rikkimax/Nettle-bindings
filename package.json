@@ -1,0 +1,33 @@
+{
+	"name": "nettle",
+	"description": "Nettle bindings. Using Derelict shared library loader. Unofficial project.",
+	"authors": ["Richard Andrew Cattermole"],
+	"homepage": "https://github.com/rikkimax/Nettle-bindings",
+	"license": "boost",
+	"dependencies": {
+		"derelict-util": ">=0.9.3"
+	},
+	"sourcePaths": [],
+	"subPackages": [
+		{
+			"name": "dynamic",
+			"targetType": "library",
+			"sourcePaths": ["source/dynamic"]
+		},
+		{
+			"name": "static",
+			"targetType": "library",
+			"sourcePaths": ["source/static"]
+		}
+	],
+	"configurations": [
+		{
+			"name": "dynamic",
+			"dependencies": {"nettle:dynamic": "~master"}
+		},
+		{
+			"name": "static",
+			"dependencies": {"nettle:static": "~master"}
+		}
+	]
+}

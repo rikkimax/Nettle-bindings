@@ -295,7 +295,10 @@ for file in files/remove/*.d
 do
 	rdmd remove.d output/all.types $file
 done
-
+for file in files/unique/*.d
+do
+	rdmd unique.d output/all.types $file
+done
 
 cat files/dynamic/functions.top > ../source/dynamic/nettle/functions.d
 cat output/all.defs | awk '{print "    "$0;}' | sort - -u >> ../source/dynamic/nettle/functions.d
@@ -305,6 +308,7 @@ cat files/dynamic/functions.bottom >> ../source/dynamic/nettle/functions.d
 
 cat files/dynamic/types.top > ../source/dynamic/nettle/types.d
 cat output/all.types >> ../source/dynamic/nettle/types.d
+cat files/dynamic/types.bottom >> ../source/dynamic/nettle/types.d
 
 cat files/dynamic/nettle.top > ../source/dynamic/nettle/nettle.d
 cat output/all.bind | awk '{print "            "$0;}' | sort - -u >> ../source/dynamic/nettle/nettle.d
